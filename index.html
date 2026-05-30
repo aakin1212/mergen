@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>𝕏 Arşivi Zaman Matrisi / Mergen ETÜGEN</title>
+    <title>𝕏 Arşivi Zaman Matrisi</title>
     <style>
         /* 🎯 USER OPTIMIZED PREMIUM DARK PALETTE */
         :root { 
@@ -308,10 +308,11 @@
     </style>
 </head>
 <body>
+<!-- 🔥 FULL SCREEN FLASH OVERLAY ELEMENT -->
 <div id="flash-screen" class="flash-overlay"></div>
 
 <header>
-    <h2>𝕏 Arşivi Zaman Matrisi / Mergen ETÜGEN</h2>
+    <h2>𝕏 Arşivi Zaman Matrisi</h2>
     <div class="header-controls">
         <button onclick="openTagModal()">🏷️ Filtrele</button>
         <button onclick="rollDice()" id="dice-btn" class="dice-btn" title="Filtreye Göre Rastgele Gönderi Aç">🎲 Zar At</button>
@@ -345,6 +346,9 @@
     let selectedTags = [];
     let isShakeEngineActive = false;
     let lastShakeTimestamp = 0;
+
+    // 🔥 CRITICAL: APPLE GÜVENLİK DUVARI ALGILAMA VE DEEP-LINK SÜRÜCÜSÜ
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
     const monthsTr = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const daysTr = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
@@ -396,7 +400,6 @@
         if (openedInSubsetCount > 0) { resetBtn.style.display = "inline-block"; } else { resetBtn.style.display = "none"; }
     }
 
-    // 📱 SALLA OKU AKTİVASYON VE PERMISSION KATMANI (iOS + Android)
     function toggleShakeEngine() {
         const sBtn = document.getElementById("shake-btn");
         
@@ -408,7 +411,6 @@
             return;
         }
 
-        // iOS 13+ İvmeölçer İzin İstek Blok Mekanizması
         if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
             DeviceMotionEvent.requestPermission()
                 .then(function(permissionState) {
@@ -420,7 +422,6 @@
                 })
                 .catch(console.error);
         } else {
-            // Android veya Standart Webview
             activateShakeListener(sBtn);
         }
     }
@@ -432,26 +433,21 @@
         buttonEl.innerText = "🍏 Salla Oku: Aktif";
     }
 
-    // 📱 SALLAMA HAREKETİNİ YAKALAYAN NET IVME FİLTRESİ
     function handleShakeEvent(event) {
         if (!event.acceleration) return;
         
         const acc = event.acceleration;
-        // Yerçekimsiz doğrusal ivme vektör büyüklüğü
         const totalAcceleration = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
         const now = Date.now();
 
-        // Yanlış alarmları engellemek için yüksek eşik (26 m/s^2) ve 2.5 sn cooldown kilidi
         if (totalAcceleration > 26 && (now - lastShakeTimestamp > 2500)) {
             lastShakeTimestamp = now;
             
-            // 🎬 1. EKRAN PATLAMA EFEKTİNİ TETİKLE
             const flashOverlay = document.getElementById("flash-screen");
             flashOverlay.classList.remove("flash-fired");
-            void flashOverlay.offsetWidth; // DOM Reflow tetikleme (Animasyon sıfırlama)
+            void flashOverlay.offsetWidth; 
             flashOverlay.classList.add("flash-fired");
 
-            // Metraj kaymasından önce patlama efektinin parlamasını bekle (150ms)
             setTimeout(function() {
                 rollDice();
             }, 150);
@@ -493,7 +489,13 @@
             saveOpenedIds(openedIds);
             updateDiceStats();
             renderContinuousMatrix();
-            window.open(chosenPost.u, "_blank");
+            
+            // 🔥 EVRENSEL REDIRECTION MOTORU (iOS'TA NATIV UYGULAMAYI TETİKLER)
+            if (isIOS) {
+                window.location.href = chosenPost.u;
+            } else {
+                window.open(chosenPost.u, "_blank");
+            }
         }
 
         if (targetCell) {
@@ -508,7 +510,6 @@
                 window.removeEventListener("scroll", scrollListener);
                 clearTimeout(scrollTimeout);
 
-                // Ekran patlaması ve kaydırma bitti, şimdi hücreyi parlat
                 targetCell.classList.add("dice-highlight");
 
                 setTimeout(function() {
@@ -633,7 +634,13 @@
                             const postId = getPostId(matches[0].u);
                             let currentOpened = getOpenedIds();
                             if (!currentOpened.includes(postId)) { currentOpened.push(postId); saveOpenedIds(currentOpened); }
-                            window.open(matches[0].u, "_blank"); renderContinuousMatrix();
+                            
+                            if (isIOS) {
+                                window.location.href = matches[0].u;
+                            } else {
+                                window.open(matches[0].u, "_blank"); 
+                            }
+                            renderContinuousMatrix();
                         };
                     } else {
                         btn.classList.add("multiple"); 
@@ -717,15 +724,28 @@
         const openedIds = getOpenedIds();
         
         posts.forEach(function(post, index) { 
-            let a = document.createElement("a"); a.className = "x-link-btn"; a.href = post.u; a.target = "_blank"; 
+            let a = document.createElement("a"); a.className = "x-link-btn"; 
+            
+            // iPadOS Evrensel Link entegrasyonu için target bypass katmanı
+            if (!isIOS) {
+                a.href = post.u; a.target = "_blank"; 
+            } else {
+                a.style.cursor = "pointer";
+            }
+            
             const isRead = openedIds.includes(getPostId(post.u));
             a.innerHTML = isRead ? "✓ Gönderi " + (index + 1) + " (𝕏'te Aç)" : "🔗 Gönderi " + (index + 1) + " (𝕏'te Aç)";
             if (isRead) a.classList.add("is-modal-read");
 
-            a.onclick = function() {
+            a.onclick = function(e) {
+                if (isIOS) { e.preventDefault(); }
                 const postId = getPostId(post.u);
                 let currentOpened = getOpenedIds();
                 if (!currentOpened.includes(postId)) { currentOpened.push(postId); saveOpenedIds(currentOpened); }
+                
+                if (isIOS) {
+                    window.location.href = post.u;
+                }
                 setTimeout(function() { renderContinuousMatrix(); openPostModal(dateStr, posts); }, 400);
             };
             container.appendChild(a); 
